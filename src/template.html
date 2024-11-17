@@ -5,36 +5,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todo app</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+        rel="stylesheet">
+    <script src="https://kit.fontawesome.com/56f020d2ca.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-    <nav id="sidebar">
+    <nav>
         <div class="profile-container">
-            <img src="" alt="profile-image">
+            <img src="./images/CV nuotrauka.jpg" alt="Profile image" class="profile-image">
             <span>Deividas</span>
         </div>
-        <div class="task-button-container">
-            <button>
-                <img src="" alt="Add task button icon">
+        <div>
+            <button class="add-task-btn">
+                <i class="fa-solid fa-circle-plus"></i>
                 <span>Add task</span>
             </button>
         </div>
         <div class="projects-heading-container">
             <span>My Projects</span>
-            <button>
-                <img src="" alt="Add project button icon">
+            <button class="add-project-btn">
+                <i class="fa-solid fa-plus"></i>
             </button>
         </div>
         <div class="project-container">
-            <span>#</span>
             <span>Home</span>
         </div>
     </nav>
-    <main id="main-container">
-        <h1># Home</h1>
-        <div class="add-task-button">
-            <button>
-                <img src="" alt="">
+    <main>
+        <h1>Home</h1>
+        <div class="add-task-container">
+            <dialog>
+                <form method="dialog">
+                    <div class="form-container">
+                        <input type="text" name="task-name" placeholder="Task name">
+                        <input type="text" name="description" placeholder="Description">
+                        <div class="task-btns">
+                            <button type="button" class="date-picker-btn">
+                                <i class="fa-regular fa-calendar"></i>
+                                <span>Due date</span>
+                            </button>
+                            <button type="button" class="priority-btn">
+                                <i class="fa-regular fa-flag"></i>
+                                <span>Priority</span>
+                            </button>
+                        </div>
+                    </div>
+                    <hr class="divider">
+                    <div class="dialog-btns">
+                        <button type="button" class="project-btn">
+                            <i class="fa-solid fa-inbox"></i>
+                            <span>Home</span>
+                            <i class="fa-solid fa-caret-down fa-sm"></i>
+                        </button>
+                        <div>
+                            <button type="button" class="cancel-btn">Cancel</button>
+                            <button type="button" class="add-btn">Add task</button>
+                        </div>
+                    </div>
+                </form>
+            </dialog>            
+            <button class="main-task-btn">
+                <i class="fa-solid fa-plus" style="color: #dc4c3e;"></i>
+                <span>Add task</span>
             </button>
         </div>
     </main>
