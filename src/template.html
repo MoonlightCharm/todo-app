@@ -31,27 +31,37 @@
                 <i class="fa-solid fa-plus"></i>
             </button>
         </div>
-        <div class="project-container">
-            <span>Home</span>
+        <div class="project-list-container">
+            <div class="default-project-container">
+                <span>Home</span>
+            </div>
         </div>
     </nav>
     <main>
         <h1>Home</h1>
         <div class="add-task-container">
-            <dialog>
+            <dialog id="task-dialog">
                 <form method="dialog">
                     <div class="form-container">
-                        <input type="text" name="task-name" placeholder="Task name">
-                        <input type="text" name="description" placeholder="Description">
+                        <input type="text" name="task-name" placeholder="Task name" id="task-name">
+                        <input type="text" name="task-description" placeholder="Description" id="task-description">
                         <div class="task-btns">
+                            <input type="text" id="datepicker">
                             <button type="button" class="date-picker-btn">
                                 <i class="fa-regular fa-calendar"></i>
                                 <span>Due date</span>
                             </button>
-                            <button type="button" class="priority-btn">
-                                <i class="fa-regular fa-flag"></i>
-                                <span>Priority</span>
-                            </button>
+                            <div class="priority-container">
+                                <button type="button" class="priority-btn">
+                                    <i class="fa-regular fa-flag"></i>
+                                    <span>Priority</span>
+                                </button>
+                                <ul class="custom-dropdown hidden">
+                                    <li data-value="1">High priority</li>
+                                    <li data-value="2">Mid priority</li>
+                                    <li data-value="3">Low priority</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     <hr class="divider">
@@ -67,7 +77,21 @@
                         </div>
                     </div>
                 </form>
-            </dialog>            
+            </dialog>
+            <dialog id="project-dialog">
+                <form method="dialog">
+                    <div class="form-container">
+                        <input type="text" name="project-name" placeholder="Project name" id="project-name">
+                    </div>
+                    <hr class="divider">
+                    <div class="project-dialog-btns">
+                        <div>
+                            <button type="button" class="cancel-project-btn">Cancel</button>
+                            <button type="button" class="create-project-btn">Add project</button>
+                        </div>
+                    </div>
+                </form>
+            </dialog>
             <button class="main-task-btn">
                 <i class="fa-solid fa-plus" style="color: #dc4c3e;"></i>
                 <span>Add task</span>
