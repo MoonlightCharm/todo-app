@@ -177,7 +177,8 @@ main {
     color: #dc4c3e;
 }
 
-#task-dialog, #project-dialog {
+#task-dialog,
+#project-dialog {
     padding: 0;
     border: 1px solid #dcdcdc;
     border-radius: 8px;
@@ -214,7 +215,7 @@ dialog::backdrop {
 
 .dialog-btns {
     display: flex;
-    justify-content: space-between;
+    justify-content: end;
     padding: 16px;
 }
 
@@ -366,6 +367,7 @@ input:nth-of-type(2) {
 .title-description-container {
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 .date-priority-container {
@@ -380,6 +382,7 @@ input:nth-of-type(2) {
 
 .task-container {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
     margin-top: 20px;
@@ -397,6 +400,7 @@ input:nth-of-type(2) {
     display: flex;
     align-items: center;
     gap: 14px;
+    flex: 1;
 }
 
 .project-dialog-btns {

@@ -1,7 +1,12 @@
 import Pikaday from 'pikaday';
 import 'pikaday/css/pikaday.css';
 
-// Manage the dialog state
+// Store tasks by project
+const tasksByProject = {
+    Home: [], // Default project
+};
+
+// Dialog management
 export function openDialog() {
     const addTaskBtn = document.querySelector('.add-task-btn');
     const addTaskBtn2 = document.querySelector('.main-task-btn');
@@ -25,20 +30,19 @@ export function closeDialog() {
     createTaskBtn.addEventListener('click', () => dialog.close());
 }
 
-// Handle date picker functionality
+// Date picker control
 export function controlDatePicker() {
     const dialog = document.querySelector('#task-dialog');
     const datePickerBtn = document.querySelector('.date-picker-btn');
     const dueDate = datePickerBtn.querySelector('span');
     const defaultText = 'Due date';
     let selectedDate = '';
-    let picker; // Declare picker outside to persist its state
+    let picker;
 
-    // Initialize the picker on first use
     function initializePicker() {
         if (!picker) {
             picker = new Pikaday({
-                field: document.createElement('input'), // Dummy input
+                field: document.createElement('input'),
                 trigger: datePickerBtn,
                 container: dialog,
                 format: 'YYYY-MM-DD',
@@ -50,11 +54,10 @@ export function controlDatePicker() {
                 },
             });
 
-            picker.hide(); // Ensure picker is initially hidden
+            picker.hide();
 
-            // Ensure the picker is hidden when clicking outside it
             document.addEventListener('click', (e) => {
-                const pickerElement = picker.el; // Picker's DOM element
+                const pickerElement = picker.el;
                 if (
                     !pickerElement.contains(e.target) &&
                     e.target !== datePickerBtn &&
@@ -66,35 +69,32 @@ export function controlDatePicker() {
         }
     }
 
-    // Handle 'Due date' button click
     datePickerBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        initializePicker(); // Initialize picker if not already done
+        initializePicker();
 
         const rect = datePickerBtn.getBoundingClientRect();
         const dialogRect = dialog.getBoundingClientRect();
 
-        // Adjust picker position relative to dialog
         const pickerElement = picker.el;
         pickerElement.style.position = 'absolute';
         pickerElement.style.top = `${rect.bottom - dialogRect.top}px`;
         pickerElement.style.left = `${rect.left - dialogRect.left}px`;
         pickerElement.style.zIndex = '9999';
 
-        picker.show(); // Show picker
+        picker.show();
     });
 
-    // Reset state when the dialog is closed
     dialog.addEventListener('close', () => {
         dueDate.textContent = defaultText;
-        selectedDate = ''; // Reset selected date
-        if (picker) picker.hide(); // Hide picker on dialog close
+        selectedDate = '';
+        if (picker) picker.hide();
     });
 
-    return () => selectedDate; // Return function to access selected date
+    return () => selectedDate;
 }
 
-// Handle priority selection
+// Priority control
 export function setPriority() {
     const dialog = document.querySelector('#task-dialog');
     const priorityBtn = document.querySelector('.priority-btn');
@@ -121,10 +121,10 @@ export function setPriority() {
 
     dialog.addEventListener('close', () => {
         priorityBtn.querySelector('span').textContent = 'Priority';
-        selectedPriority = ''; // Reset the value when dialog closes
+        selectedPriority = '';
     });
 
-    return () => selectedPriority; // Return a function to access the current priority
+    return () => selectedPriority;
 }
 
 // Add task functionality
@@ -136,53 +136,54 @@ export function addTask(getSelectedDate, getSelectedPriority) {
 
     if (createTaskBtn) {
         createTaskBtn.addEventListener('click', () => {
-            const task = createTask(
-                taskTitleInput?.value || '',
-                taskDescriptionInput?.value || '',
-                getSelectedDate(), // Use the accessor to get the latest date
-                getSelectedPriority() // Use the accessor to get the latest priority
-            );
+            const taskTitle = taskTitleInput.value.trim();
+            const taskDescription = taskDescriptionInput.value.trim();
+            const selectedDate = getSelectedDate();
+            const selectedPriority = getSelectedPriority();
 
-            displayTask(task.title, task.description, task.date, task.priority);
+            if (!taskTitle) return; // Prevent adding tasks with empty titles
 
-            console.log(task); // Debugging
+            const task = createTask(taskTitle, taskDescription, selectedDate, selectedPriority);
+            const currentProject = document.querySelector('main h1').textContent;
 
-            // Reset inputs after task creation
+            if (!tasksByProject[currentProject]) {
+                tasksByProject[currentProject] = [];
+            }
+            tasksByProject[currentProject].push(task);
+
+            displayTask(task.title, task.description, task.date, task.priority, currentProject);
+
             taskTitleInput.value = '';
             taskDescriptionInput.value = '';
         });
     }
 
     dialog.addEventListener('close', () => {
-        taskTitleInput.value = ''; // Reset title input on close
-        taskDescriptionInput.value = ''; // Reset description input on close
+        taskTitleInput.value = '';
+        taskDescriptionInput.value = '';
     });
 }
 
-// Task factory function
 function createTask(title, description, date, priority) {
-    return {
-        title,
-        description,
-        date,
-        priority,
-    };
+    return { title, description, date, priority };
 }
 
-export function displayTask(title, description, date, priority) {
+export function displayTask(title, description, date, priority, projectName) {
     const mainContainer = document.querySelector('main');
     const taskContainer = document.createElement('div');
     taskContainer.classList.add('task-container');
+
+    const checkboxTitleDescriptionContainer = document.createElement('div');
+    checkboxTitleDescriptionContainer.classList.add('checkbox-title-description-container');
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.classList.add('checkbox');
 
-    // Use clearTask to attach removal functionality to the checkbox
-    clearTask(taskContainer, checkbox);
+    clearTask(taskContainer, checkbox, projectName, title);
 
-    const checkboxTitleDescriptionContainer = document.createElement('div');
-    checkboxTitleDescriptionContainer.classList.add('checkbox-title-description-container');
+    const titleDescriptionContainer = document.createElement('div');
+    titleDescriptionContainer.classList.add('title-description-container');
 
     const taskTitle = document.createElement('h2');
     taskTitle.textContent = title;
@@ -190,13 +191,14 @@ export function displayTask(title, description, date, priority) {
     const taskDescription = document.createElement('p');
     taskDescription.textContent = description;
 
-    const titleDescriptionContainer = document.createElement('div');
-    titleDescriptionContainer.classList.add('title-description-container');
     titleDescriptionContainer.appendChild(taskTitle);
     titleDescriptionContainer.appendChild(taskDescription);
 
     checkboxTitleDescriptionContainer.appendChild(checkbox);
     checkboxTitleDescriptionContainer.appendChild(titleDescriptionContainer);
+
+    const datePriorityContainer = document.createElement('div');
+    datePriorityContainer.classList.add('date-priority-container');
 
     const taskDate = document.createElement('p');
     taskDate.textContent = date;
@@ -204,8 +206,6 @@ export function displayTask(title, description, date, priority) {
     const taskPriority = document.createElement('p');
     taskPriority.textContent = priority;
 
-    const datePriorityContainer = document.createElement('div');
-    datePriorityContainer.classList.add('date-priority-container');
     datePriorityContainer.appendChild(taskDate);
     datePriorityContainer.appendChild(taskPriority);
 
@@ -215,22 +215,25 @@ export function displayTask(title, description, date, priority) {
     mainContainer.appendChild(taskContainer);
 }
 
-export function clearTask(taskContainer, checkbox) {
-    let removalTimeout; // Variable to store the timeout ID
+
+function clearTask(taskContainer, checkbox, projectName, taskTitle) {
+    let removalTimeout;
 
     checkbox.addEventListener('change', () => {
         if (checkbox.checked) {
-            // Set a timeout to remove the taskContainer after 1 second
             removalTimeout = setTimeout(() => {
                 taskContainer.remove();
+                tasksByProject[projectName] = tasksByProject[projectName].filter(
+                    task => task.title !== taskTitle
+                );
             }, 1500);
         } else {
-            // Clear the timeout if the checkbox is unchecked
             clearTimeout(removalTimeout);
         }
     });
 }
 
+// Project dialog and management
 export function openProjectDialog() {
     const addProjectBtn = document.querySelector('.add-project-btn');
     const dialog = document.querySelector('#project-dialog');
@@ -240,7 +243,6 @@ export function openProjectDialog() {
 export function closeProjectDialog() {
     const dialog = document.querySelector('#project-dialog');
     const closeDialogBtn = document.querySelector('.cancel-project-btn');
-    const createProjectBtn = document.querySelector('.create-project-btn');
     const projectName = document.querySelector('#project-name');
 
     closeDialogBtn.addEventListener('click', () => {
@@ -254,50 +256,84 @@ export function closeProjectDialog() {
             projectName.value = '';
         }
     });
-
-    createProjectBtn.addEventListener('click', () => {
-        dialog.close();
-    });
-
 }
 
 export function createProject() {
-    const projectName = document.querySelector('#project-name');
+    const projectNameInput = document.querySelector('#project-name');
     const createProjectBtn = document.querySelector('.create-project-btn');
     const projectListContainer = document.querySelector('.project-list-container');
+    const dialog = document.querySelector('#project-dialog');
 
     createProjectBtn.addEventListener('click', () => {
-        const projectNameSpan = document.createElement('span');
-        projectNameSpan.textContent = projectName.value;
+        const projectName = projectNameInput.value.trim();
+
+        if (!projectName || tasksByProject[projectName]) return;
+
+        tasksByProject[projectName] = [];
+
         const projectContainer = document.createElement('div');
         projectContainer.classList.add('project-container');
+
+        const projectNameSpan = document.createElement('span');
+        projectNameSpan.textContent = projectName;
+
         projectContainer.appendChild(projectNameSpan);
         projectListContainer.appendChild(projectContainer);
+
+        projectNameInput.value = '';
+        dialog.close();
     });
 }
-
 
 export function highlightSelectedProject() {
     const projectListContainer = document.querySelector('.project-list-container');
     const defaultProjectContainer = document.querySelector('.default-project-container');
 
-    // Initially add 'selected-project' to the default project
     defaultProjectContainer.classList.add('selected-project');
 
-    // Add event listener to the parent container for delegation
     projectListContainer.addEventListener('click', (event) => {
-        // Check if the clicked element is a project container
-        const clickedContainer = event.target.closest('.project-container') || 
-                                 event.target.closest('.default-project-container');
+        const clickedContainer = event.target.closest('.project-container') ||
+            event.target.closest('.default-project-container');
         if (!clickedContainer) return;
 
-        // Remove 'selected-project' class from all containers
         projectListContainer.querySelectorAll('.project-container, .default-project-container')
             .forEach(container => container.classList.remove('selected-project'));
 
-        // Add 'selected-project' class to the clicked container
         clickedContainer.classList.add('selected-project');
     });
 }
 
+export function updateMainView() {
+    const projectListContainer = document.querySelector('.project-list-container');
+    const mainContainer = document.querySelector('main');
+    const h1Tag = mainContainer.querySelector('h1');
+    const addTaskContainer = mainContainer.querySelector('.add-task-container');
 
+    projectListContainer.addEventListener('click', (event) => {
+        const clickedProject = event.target.closest('.project-container') ||
+            event.target.closest('.default-project-container');
+
+        if (!clickedProject) return;
+
+        const projectName = clickedProject.querySelector('span').textContent;
+
+        h1Tag.textContent = projectName;
+
+        clearDisplayedTasks();
+
+        if (!mainContainer.contains(addTaskContainer)) {
+            mainContainer.appendChild(addTaskContainer);
+        }
+
+        const projectTasks = tasksByProject[projectName] || [];
+        projectTasks.forEach(task => {
+            displayTask(task.title, task.description, task.date, task.priority, projectName);
+        });
+    });
+}
+
+function clearDisplayedTasks() {
+    const mainContainer = document.querySelector('main');
+    const taskContainers = mainContainer.querySelectorAll('.task-container');
+    taskContainers.forEach(taskContainer => taskContainer.remove());
+}
