@@ -1,8 +1,4 @@
-const tasksByProject = {
-    Home: [] // Default project
-};
-
-let currentProject = 'Home'; // Default project
+import { tasksByProject } from './dataStore';
 
 export function addTask(getSelectedDate, getSelectedPriority) {
     const taskTitleInput = document.querySelector('#task-name');
@@ -12,19 +8,22 @@ export function addTask(getSelectedDate, getSelectedPriority) {
 
     if (createTaskBtn) {
         createTaskBtn.addEventListener('click', () => {
-            const task = {
-                title: taskTitleInput.value || '',
-                description: taskDescriptionInput.value || '',
-                date: getSelectedDate(),
-                priority: getSelectedPriority(),
-            };
+            const taskTitle = taskTitleInput.value.trim();
+            const taskDescription = taskDescriptionInput.value.trim();
+            const selectedDate = getSelectedDate();
+            const selectedPriority = getSelectedPriority();
+
+            if (!taskTitle) return;
+
+            const task = createTask(taskTitle, taskDescription, selectedDate, selectedPriority);
+            const currentProject = document.querySelector('main h1').textContent;
 
             if (!tasksByProject[currentProject]) {
                 tasksByProject[currentProject] = [];
             }
             tasksByProject[currentProject].push(task);
 
-            displayTasksForCurrentProject();
+            displayTask(task.title, task.description, task.date, task.priority, currentProject);
 
             taskTitleInput.value = '';
             taskDescriptionInput.value = '';
@@ -37,32 +36,76 @@ export function addTask(getSelectedDate, getSelectedPriority) {
     });
 }
 
-export function displayTasksForCurrentProject() {
-    const mainContainer = document.querySelector('main');
-    mainContainer.innerHTML = ''; // Clear existing tasks
-
-    const tasks = tasksByProject[currentProject] || [];
-    tasks.forEach(task => displayTask(task));
+function createTask(title, description, date, priority) {
+    return { title, description, date, priority };
 }
 
-function displayTask({ title, description, date, priority }) {
+export function displayTask(title, description, date, priority, projectName) {
     const mainContainer = document.querySelector('main');
     const taskContainer = document.createElement('div');
     taskContainer.classList.add('task-container');
 
-    taskContainer.innerHTML = `
-        <div class="checkbox-title-description-container">
-            <input type="checkbox" class="checkbox">
-            <div class="title-description-container">
-                <h2>${title}</h2>
-                <p>${description}</p>
-            </div>
-        </div>
-        <div class="date-priority-container">
-            <p>${date}</p>
-            <p>${priority}</p>
-        </div>
-    `;
+    const checkboxTitleDescriptionContainer = document.createElement('div');
+    checkboxTitleDescriptionContainer.classList.add('checkbox-title-description-container');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.classList.add('checkbox');
+
+    clearTask(taskContainer, checkbox, projectName, title);
+
+    const titleDescriptionContainer = document.createElement('div');
+    titleDescriptionContainer.classList.add('title-description-container');
+
+    const taskTitle = document.createElement('h2');
+    taskTitle.textContent = title;
+
+    const taskDescription = document.createElement('p');
+    taskDescription.textContent = description;
+
+    titleDescriptionContainer.appendChild(taskTitle);
+    titleDescriptionContainer.appendChild(taskDescription);
+
+    checkboxTitleDescriptionContainer.appendChild(checkbox);
+    checkboxTitleDescriptionContainer.appendChild(titleDescriptionContainer);
+
+    const datePriorityContainer = document.createElement('div');
+    datePriorityContainer.classList.add('date-priority-container');
+
+    const taskDate = document.createElement('p');
+    taskDate.textContent = date;
+
+    const taskPriority = document.createElement('p');
+    taskPriority.textContent = priority;
+
+    datePriorityContainer.appendChild(taskDate);
+    datePriorityContainer.appendChild(taskPriority);
+
+    taskContainer.appendChild(checkboxTitleDescriptionContainer);
+    taskContainer.appendChild(datePriorityContainer);
 
     mainContainer.appendChild(taskContainer);
+}
+
+function clearTask(taskContainer, checkbox, projectName, taskTitle) {
+    let removalTimeout;
+
+    checkbox.addEventListener('change', () => {
+        if (checkbox.checked) {
+            removalTimeout = setTimeout(() => {
+                taskContainer.remove();
+                tasksByProject[projectName] = tasksByProject[projectName].filter(
+                    task => task.title !== taskTitle
+                );
+            }, 1500);
+        } else {
+            clearTimeout(removalTimeout);
+        }
+    });
+}
+
+export function clearDisplayedTasks() {
+    const mainContainer = document.querySelector('main');
+    const taskContainers = mainContainer.querySelectorAll('.task-container');
+    taskContainers.forEach(taskContainer => taskContainer.remove());
 }

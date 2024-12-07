@@ -1,78 +1,80 @@
-let currentProject = 'Home'; // Default project
-const tasksByProject = { Home: [] }; // Initialize task storage
-
-export function openProjectDialog() {
-    const addProjectBtn = document.querySelector('.add-project-btn');
-    const dialog = document.querySelector('#project-dialog');
-
-    addProjectBtn.addEventListener('click', () => dialog.showModal());
-}
-
-export function closeProjectDialog() {
-    const dialog = document.querySelector('#project-dialog');
-    const closeDialogBtn = document.querySelector('.cancel-project-btn');
-    const projectNameInput = document.querySelector('#project-name');
-
-    closeDialogBtn.addEventListener('click', () => {
-        dialog.close();
-        projectNameInput.value = ''; // Reset input
-    });
-
-    document.addEventListener('click', (event) => {
-        if (dialog.open && event.target === dialog) {
-            dialog.close();
-            projectNameInput.value = '';
-        }
-    });
-}
+import { tasksByProject } from './dataStore';
+import { clearDisplayedTasks, displayTask } from './taskManager';
 
 export function createProject() {
-    const createProjectBtn = document.querySelector('.create-project-btn');
     const projectNameInput = document.querySelector('#project-name');
+    const createProjectBtn = document.querySelector('.create-project-btn');
     const projectListContainer = document.querySelector('.project-list-container');
+    const dialog = document.querySelector('#project-dialog');
 
     createProjectBtn.addEventListener('click', () => {
         const projectName = projectNameInput.value.trim();
-        if (projectName && !tasksByProject[projectName]) {
-            tasksByProject[projectName] = []; // Add new project to storage
 
-            const projectContainer = document.createElement('div');
-            projectContainer.classList.add('project-container');
-            projectContainer.setAttribute('data-project', projectName);
-            projectContainer.innerHTML = `<span>${projectName}</span>`;
-            projectListContainer.appendChild(projectContainer);
-        }
+        if (!projectName || tasksByProject[projectName]) return;
+
+        tasksByProject[projectName] = [];
+
+        const projectContainer = document.createElement('div');
+        projectContainer.classList.add('project-container');
+
+        const projectNameSpan = document.createElement('span');
+        projectNameSpan.textContent = projectName;
+
+        projectContainer.appendChild(projectNameSpan);
+        projectListContainer.appendChild(projectContainer);
 
         projectNameInput.value = '';
-        document.querySelector('#project-dialog').close();
+        dialog.close();
     });
 }
 
-export function highlightSelectedProject(displayTasksCallback) {
+export function highlightSelectedProject() {
     const projectListContainer = document.querySelector('.project-list-container');
     const defaultProjectContainer = document.querySelector('.default-project-container');
 
     defaultProjectContainer.classList.add('selected-project');
-    defaultProjectContainer.setAttribute('data-project', 'Home');
 
     projectListContainer.addEventListener('click', (event) => {
-        const clickedProject = event.target.closest('.project-container, .default-project-container');
-        if (!clickedProject) return;
+        const clickedContainer = event.target.closest('.project-container') ||
+            event.target.closest('.default-project-container');
+        if (!clickedContainer) return;
 
         projectListContainer.querySelectorAll('.project-container, .default-project-container')
-            .forEach(project => project.classList.remove('selected-project'));
+            .forEach(container => container.classList.remove('selected-project'));
 
-        clickedProject.classList.add('selected-project');
-        currentProject = clickedProject.getAttribute('data-project'); // Update current project
-
-        displayTasksCallback(); // Update displayed tasks for the selected project
+        clickedContainer.classList.add('selected-project');
     });
 }
 
-export function getCurrentProject() {
-    return currentProject;
-}
+export function updateMainView() {
+    const projectListContainer = document.querySelector('.project-list-container');
+    const mainContainer = document.querySelector('main');
+    const h1Tag = mainContainer.querySelector('h1');
+    const addTaskContainer = mainContainer.querySelector('.add-task-container');
 
-export function getTasksByProject() {
-    return tasksByProject;
+    projectListContainer.addEventListener('click', (event) => {
+        const clickedProject = event.target.closest('.project-container') ||
+            event.target.closest('.default-project-container');
+
+        if (!clickedProject) return;
+
+        const projectName = clickedProject.querySelector('span').textContent;
+
+        // Update main view header
+        h1Tag.textContent = projectName;
+
+        // Clear existing tasks from view
+        clearDisplayedTasks();
+
+        // Ensure add-task container is visible
+        if (!mainContainer.contains(addTaskContainer)) {
+            mainContainer.appendChild(addTaskContainer);
+        }
+
+        // Fetch and display tasks for the selected project
+        const projectTasks = tasksByProject[projectName] || [];
+        projectTasks.forEach(task => {
+            displayTask(task.title, task.description, task.date, task.priority, projectName);
+        });
+    });
 }
